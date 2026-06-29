@@ -1,5 +1,28 @@
 Set Implicit Arguments.
 
+(* Booleans and negation *)
+
+Inductive bool : Type :=
+| true : bool
+| false : bool.
+
+Check false.
+
+Definition neg (b : bool) :=
+  match b with true => false | false => true end.
+
+Compute neg true.
+
+Lemma neg_inv b :
+  neg (neg b) = b.
+Proof.
+  destruct b.
+  - cbn. reflexivity.
+  - reflexivity.
+Qed.
+
+(* Natural numbers and addition *)
+
 Inductive nat : Type :=
 | O : nat
 | S : nat -> nat.
@@ -44,24 +67,7 @@ Proof.
   - rewrite add_S_left. rewrite IHn. reflexivity.
 Qed.
 
-Inductive bool : Type :=
-| true : bool
-| false : bool.
-
-Check false.
-
-Definition neg (b : bool) :=
-  match b with true => false | false => true end.
-
-Compute neg true.
-
-Lemma neg_inv b :
-  neg (neg b) = b.
-Proof.
-  destruct b.
-  - cbn. reflexivity.
-  - reflexivity.
-Qed.
+(* Lists, concatenation and length *)
 
 Inductive list (A : Type) : Type :=
 | nil : list A

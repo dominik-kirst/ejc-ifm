@@ -14,7 +14,7 @@ Fixpoint add (n m : nat) :=
 
 Compute add (S (S (S O))) (S (S O)).
 
-Lemma add_O_rigth n :
+Lemma add_O_right n :
   add n O = n.
 Proof.
   cbn. reflexivity.
@@ -72,3 +72,35 @@ Check cons O (nil nat).
 Arguments nil {_}.
 
 Check cons O nil.
+
+Fixpoint app A (L L' : list A) : list A :=
+  match L with 
+  | nil => L'
+  | cons x L => cons x (app L L')
+  end.
+
+Compute app (cons true nil) (cons false nil).
+
+Lemma app_nil_right A (L : list A) :
+  app L nil = L.
+Proof.
+  induction L; cbn.
+  - reflexivity.
+  - rewrite IHL. reflexivity.
+Qed.
+
+Fixpoint length A (L : list A) : nat :=
+  match L with
+  | nil => O
+  | cons x L => S (length L)
+  end.
+
+Compute length (cons true (cons false nil)).
+
+Lemma length_add A (L L' : list A) :
+  length (app L L') = add (length L) (length L').
+Proof.
+  induction L; cbn.
+  - now rewrite add_O_left.
+  - now rewrite IHL, add_S_left.
+Qed.

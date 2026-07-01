@@ -1,6 +1,5 @@
 Set Implicit Arguments.
 Require Import Setoid Bool.
-Require Import Coq.Logic.ConstructiveEpsilon.
 
 (* Basic synthetic computability notions *)
 
@@ -24,9 +23,12 @@ Notation compl P :=
 Lemma dec_sdec_compl X (P : X -> Prop) :
   dec P -> sdec (compl P).
 Proof.
-  intros [d Hd]. exists (fun x _ => negb (d x)). intros x; split; intros H.
-  - exists 42. rewrite Hd in H. destruct (d x); trivial. now contradict H.
-  - destruct H as [_ H]. intros Hx % Hd. destruct (d x); cbn in H; congruence.
+  intros [d Hd]. exists (fun x _ => negb (d x)).
+  intros x; split; intros H.
+  - exists 42. rewrite Hd in H.
+    destruct (d x); trivial. now contradict H.
+  - destruct H as [_ H]. intros Hx % Hd.
+    destruct (d x); cbn in H; congruence.
 Qed.
 
 Definition red X Y (P : X -> Prop) (Q : Y -> Prop) :=
@@ -37,6 +39,13 @@ Lemma red_dec X Y (P : X -> Prop) (Q : Y -> Prop) :
 Proof.
   intros [r Hr] [d Hd]. exists (fun x => d (r x)).
   intros x. rewrite Hr. rewrite Hd. reflexivity.
+Qed.
+
+Lemma red_sdec X Y (P : X -> Prop) (Q : Y -> Prop) :
+  red P Q -> sdec Q -> sdec P.
+Proof.
+  intros [r Hr] [s Hs]. exists (fun x => s (r x)).
+  intros x. rewrite Hr. rewrite Hs. reflexivity.
 Qed.
 
 (* Post's theorem *)
@@ -80,13 +89,10 @@ Section Sys.
   Proof.
     intros HC. apply Post.
     - apply prv_sdec.
-    - destruct prv_sdec as [s Hs].
-      exists (fun A n => s (neg A) n).
-      intros A. split; intros HA.
-      + destruct (HC A) as [HP|HR].
-        * contradiction.
-        * apply Hs. apply HR.
-      + apply Hs in HA. intros H. now apply (neg_cons H).
+    - apply red_sdec with sent prv; trivial.
+      exists neg. intros A. split; intros H.
+      + destruct (HC A) as [HP|HR]; trivial. contradiction.
+      + intros HA. now apply (neg_cons HA).
   Qed.
 
   Variable K : nat -> Prop.
@@ -107,6 +113,53 @@ Check Godel.
 
 Print Assumptions Godel.
 
+(* Undecidable problems *)
+
+Parameter Phi : nat -> nat -> nat -> bool.
+
+Axiom ESD :
+  forall s : nat -> nat -> bool, exists c,
+    forall x, (exists n, s x n = true) <-> (exists n, Phi c x n = true).
+
+Definition K x :=
+  exists n, Phi x x n = true.
+
+Lemma K_unsdec :
+  ~ sdec (compl K).
+Proof.
+  intros [d Hd]. destruct (ESD d) as [c Hc].
+  specialize (Hc c). rewrite <- Hd in Hc. unfold K in Hc. tauto.
+Qed.
+
+Lemma K_undec :
+  ~ dec K.
+Proof.
+  intros H. apply K_unsdec. now apply dec_sdec_compl.
+Qed.
+
+(* Alternative variant *)
+
+Parameter Phi' : nat -> nat -> Prop.
+
+Axiom ESD' :
+  forall P : nat -> Prop, sdec P -> exists c,
+    forall x, P x <-> Phi' c x.
+
+Definition K' x :=
+  Phi' x x.
+
+Lemma K_unsdec' :
+  ~ sdec (compl K').
+Proof.
+  intros HK. destruct (ESD' HK) as [c Hc].
+  specialize (Hc c). unfold K' in Hc. tauto.
+Qed.
+
+Lemma K_undec' :
+  ~ dec K.
+Proof.
+  intros H. apply K_unsdec. now apply dec_sdec_compl.
+Qed.
 
 
 

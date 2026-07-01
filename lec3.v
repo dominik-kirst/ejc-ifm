@@ -36,30 +36,29 @@ Lemma red_dec X Y (P : X -> Prop) (Q : Y -> Prop) :
   red P Q -> dec Q -> dec P.
 Proof.
   intros [r Hr] [d Hd]. exists (fun x => d (r x)).
-  intros x. rewrite Hr, Hd. reflexivity.
+  intros x. rewrite Hr. rewrite Hd. reflexivity.
 Qed.
 
 (* Post's theorem *)
 
 Axiom MP :
-  forall f : nat -> bool, ~ ~ (exists n, f n = true) -> exists n, f n = true.
+  forall f : nat -> bool, ~ ~ (exists n, f n = true) -> { n | f n = true }.
 
 Theorem Post X (P : X -> Prop) :
   sdec P -> sdec (compl P) -> dec P.
 Proof.
   intros [f Hf] [g Hg].
-  enough (H : forall x, { n | orb (f x n) (g x n) = true }).
-  - exists (fun x => f x (proj1_sig (H x))). intros x. split; intros Hx.
-    + destruct (H x) as [n Hn]; cbn. apply orb_true_iff in Hn as [Hn|Hn].
+  enough (C : forall x, { n | orb (f x n) (g x n) = true }).
+  - exists (fun x => f x (proj1_sig (C x))). intros x. split; intros Hx.
+    + destruct (C x) as [n Hn]; cbn. apply orb_true_iff in Hn as [Hn|Hn].
       * apply Hn.
       * exfalso. apply (Hg x); trivial. now exists n.
     + apply Hf. eauto.
-  - intros x. apply constructive_indefinite_ground_description_nat.
-    + intros n. destruct (f x n || g x n); eauto.
-    + apply MP. intros H. assert (Hx : ~ ~ (P x \/ ~ P x)) by tauto.
-      apply Hx. intros [HP|HN]; apply H.
-      * apply Hf in HP as [n Hn]. exists n. apply orb_true_iff. now left.
-      * apply Hg in HN as [n Hn]. exists n. apply orb_true_iff. now right.
+  - intros x. apply MP. intros H.
+    assert (Hx : ~ ~ (P x \/ ~ P x)) by tauto.
+    apply Hx. intros Hx'. destruct Hx' as [HP|HN]; apply H.
+    + apply Hf in HP as [n Hn]. exists n. apply orb_true_iff. now left.
+    + apply Hg in HN as [n Hn]. exists n. apply orb_true_iff. now right.
 Qed.
 
 (* Formal systems *)
@@ -103,6 +102,10 @@ Section Sys.
   Qed.
 
 End Sys.
+
+Check Godel.
+
+Print Assumptions Godel.
 
 
 

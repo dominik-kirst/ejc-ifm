@@ -156,9 +156,9 @@ Proof.
 Qed.
 
 Lemma K_undec' :
-  ~ dec K.
+  ~ dec K'.
 Proof.
-  intros H. apply K_unsdec. now apply dec_sdec_compl.
+  intros H. apply K_unsdec'. now apply dec_sdec_compl.
 Qed.
 
 
